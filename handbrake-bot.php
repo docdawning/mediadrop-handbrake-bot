@@ -126,7 +126,7 @@ while(true){
 		echo "\nEncoding \"".$new_media_file_name."\" Complete.";	
 
 
-	    	insert_new_movie_to_database($db_name, $mediadrop_path, $new_media_file_name, $media_id);    
+		insert_new_movie_to_database($db_name, $mediadrop_path, $new_media_file_name, $media_id);    
 
 		mark_new_media_as_encoded($db_name, $new_media_file_name, $mediadrop_path, $media_id);
 
