@@ -8,11 +8,12 @@ Then it creates the needed media_files in mediadrop db and set the original medi
 There's also some relevant commentary in the php file.
 
 Install:
+* git clone https://github.com/docdawning/mediadrop-handbrake-bot.git /opt/mediadrop-handbrake-bot
 * sudo add-apt-repository ppa:stebbins/handbrake-releases; sudo apt-get update; sudo apt-get -y install handbrake-cli 
-* save bot file in /opt (If you want to change this remember to change hardcoded paths )
-* save .conf file in /etc/init/ (This also has an hardcoded path so remember to review it, also upstart ignores symlinked .conf files, so actually copy in there)
+* Update path info in .php and .conf file if you installed to some other path
+* Copy .conf file to /etc/init/ (Note upstart disregards symlinked .conf files, so actually copy in there, lame, I know)
 * start handbrake bot service with "start handbrake-bot"
-
+* Paypal donate a beer to Doc: http://www.dawning.ca/about/
 
 Features:
 * fill media_file metadata as size and bitrate
