@@ -22,6 +22,6 @@ Features:
 
 Many todos:
 * multiple encoding profiles
-* script parametrization ( remove all hardcoded paths )
+* script parameterization ( remove all hardcoded paths )
 * automated thumbnail generation 
 * ini-based config file support
