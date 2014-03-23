@@ -16,11 +16,11 @@
 	// =====================================
 	// TODO: Config should be done via an INI config file.
 	$db_host="localhost";
-	$db_user="butasimpleuser";
-	$db_password="BatmanDawgFoodHuffinGingerBeast";
-	$db_name="mediadrop_database";
-	$mediadrop_video_dir="/NFS/NAS2/WebNFS/scrumpt.us/mediadrop-git/data/media/"; // Mediadrop Media directory, note the trailing slash
-	$handbrake_bot_dir="/NFS/NAS2/WebNFS/scrumpt.us/mediadrop-handbrake/";
+	$db_user="luser";
+	$db_password="MattDamonForPresidentOfNASA";
+	$db_name="mediadrop";
+	$mediadrop_video_dir="/webshite/mediadrop-git/data/media/"; // Mediadrop Media directory, note the trailing slash
+	$handbrake_bot_dir="/opt/mediadrop-handbrake/";
 	$sleep_duration= 10;				// Bot sleep duration in secs between checks
 	// =====================================
 	
