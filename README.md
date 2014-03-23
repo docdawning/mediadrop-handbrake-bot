@@ -6,8 +6,7 @@ When an unencoded one is found it invokes handbrake to encode it in an h264, "Ap
 Then it creates the needed media_files in mediadrop db and set the original media as encoded.
 
 It also creates thumbnails using ffmpeg. I've created a little script directory in here. You can tune the thumbnail script
-a little if you want. Right now it mindlessly just makes a thumbnail from 15s in to the video, so I guess you'd better have a video
-at least that long or there will be no thumbnail.
+a little if you want. Right now it mindlessly just makes a thumbnail from 15s in to the video, so I guess you'd better have a video at least that long or there will be no automatic thumbnail. Also, if your uploaded video doesn't need to be transcoded, then the thumbnail generation offered by this won't apply since the script starts by looking for "unencoded" media.
 
 There's also some relevant commentary in the php file.
 
