@@ -16,10 +16,11 @@
 	// =====================================
 	// TODO: Config should be done via an INI config file.
 	$db_host="localhost";
-	$db_user="user";
-	$db_password="password";
-	$db_name="mediadrop_database_name";
-	$mediadrop_path="/var/www/mediadrop-git/data/media/"; // Mediadrop Media directory, note the trailing slash
+	$db_user="butasimpleuser";
+	$db_password="BatmanDawgFoodHuffinGingerBeast";
+	$db_name="mediadrop_database";
+	$mediadrop_video_dir="/NFS/NAS2/WebNFS/scrumpt.us/mediadrop-git/data/media/"; // Mediadrop Media directory, note the trailing slash
+	$handbrake_bot_dir="/NFS/NAS2/WebNFS/scrumpt.us/mediadrop-handbrake/";
 	$sleep_duration= 10;				// Bot sleep duration in secs between checks
 	// =====================================
 	
@@ -30,7 +31,11 @@
 	$handbrake_command = "HandBrakeCLI ";
 	$handbrake_preset = " --preset=\"AppleTV 3\" ";	// Presets are defined here: https://trac.handbrake.fr/wiki/BuiltInPresets
 	$new_extension = "mp4";
+	$thumbnail_script_name = $handbrake_bot_dir."scripts/ffmpeg-make-thumbnail.sh"; 
+	$thumbnail_extension = "jpg";
+	$mediadrop_thumbnail_dir = $mediadrop_video_dir."../images/media/";
 	// =====================================
+
 
 function connect_to_database($db_host, $db_user, $db_password) {
         $link = mysql_connect($db_host, $db_user, $db_password);
@@ -56,8 +61,8 @@ function replace_extension($filename, $new_extension) {
 }
 
 
-function getTranscodeCommandString($handbrake_command, $handbrake_preset, $new_extension, $mediadrop_path, $srcFile, $destFile) {
-	return $handbrake_command.$handbrake_preset." -i ".$mediadrop_path.$srcFile." -o ".$mediadrop_path.$destFile;
+function getTranscodeCommandString($handbrake_command, $handbrake_preset, $new_extension, $mediadrop_video_dir, $srcFile, $destFile) {
+	return $handbrake_command.$handbrake_preset." -i ".$mediadrop_video_dir.$srcFile." -o ".$mediadrop_video_dir.$destFile;
 }
 
 	
@@ -75,7 +80,6 @@ function insert_new_movie_to_database($db_name, $file_path, $new_file, $media_id
 	return $result;
 }
 
-
 function email_submitter($media_file_name, $author_email) {
   // send email to media owner
 	    $to = $author_email;
@@ -87,7 +91,7 @@ function email_submitter($media_file_name, $author_email) {
 }
 
 
-function mark_new_media_as_encoded($db_name, $new_media_file_name, $mediadrop_path, $media_id) {
+function mark_new_media_as_encoded($db_name, $new_media_file_name, $mediadrop_video_dir, $media_id) {
 
 	    // TODO: figure out media_file id prior db insert, avoiding update
 	    $select_query="select id from ".$db_name.".media_files where unique_id='".$new_media_file_name."'";
@@ -95,12 +99,28 @@ function mark_new_media_as_encoded($db_name, $new_media_file_name, $mediadrop_pa
 	    $new_id = mysql_fetch_assoc($result);
 	    
 	    // rename and update transcoded media file and db row
-	    rename($mediadrop_path.$new_media_file_name, $mediadrop_path.$new_id['id']."-".$new_media_file_name );
+	    rename($mediadrop_video_dir.$new_media_file_name, $mediadrop_video_dir.$new_id['id']."-".$new_media_file_name );
 	    $update_query= "update ".$db_name.".media_files set unique_id='".$new_id['id']."-".$new_media_file_name."' where id='".$new_id['id']."';";
 	    $update_query1="update ".$db_name.".media set encoded='1' where id='".$media_id."';";
 	    $result = mysql_query($update_query) or die(mysql_error());
 	    $result = mysql_query($update_query1) or die(mysql_error());
 
+}
+
+//TODO: It'd be nice to use the mediadrop thumbnail library instead. It doesn't work for me.
+function generate_thumbnail_file($mediadrop_thumbnail_dir, $thumbnail_extension, $mediadrop_video_dir, $thumbnail_script_name, $src_media_file, $media_id, $video_id) {
+	$thumbnail_orig_name = $mediadrop_thumbnail_dir.$media_id."orig.".$thumbnail_extension;
+	$src_media_file = $mediadrop_video_dir . ($video_id+1)."-".$src_media_file;
+	echo "\nGenerating Thumbnail Image from file: \"".$src_media_file."\", saving to image file: ".$thumbnail_orig_name."\"\n";
+	shell_exec($thumbnail_script_name." ".$src_media_file." ".$thumbnail_orig_name);
+	
+	//This is hacky/lazy. We could use imagemagick or something to make actually differing sizes of thumbnails, or we could call the mediadrop thumbnail lib for this
+	$thumbnail_s_name = $mediadrop_thumbnail_dir.$media_id."s.".$thumbnail_extension;
+	$thumbnail_m_name = $mediadrop_thumbnail_dir.$media_id."m.".$thumbnail_extension;
+	$thumbnail_l_name = $mediadrop_thumbnail_dir.$media_id."l.".$thumbnail_extension;
+	shell_exec("cp ".$thumbnail_orig_name." ".$thumbnail_s_name);
+	shell_exec("cp ".$thumbnail_orig_name." ".$thumbnail_m_name);
+	shell_exec("cp ".$thumbnail_orig_name." ".$thumbnail_l_name);
 }
 
 ###### MAIN ######
@@ -118,17 +138,18 @@ while(true){
 	    	$media_id = $row['mediaid'];
 	    	$author_email = $row['author_email'];
 		$new_media_file_name = replace_extension($media_file_name, $new_extension);
-		$command = getTranscodeCommandString($handbrake_command, $handbrake_preset, $new_extension, $mediadrop_path, $media_file_name, $new_media_file_name);
+		$command = getTranscodeCommandString($handbrake_command, $handbrake_preset, $new_extension, $mediadrop_video_dir, $media_file_name, $new_media_file_name);
 
 	    	// transcode file
 	    	// TODO: support for multiple profiles
 		shell_exec($command);
 		echo "\nEncoding \"".$new_media_file_name."\" Complete.";	
 
+		insert_new_movie_to_database($db_name, $mediadrop_video_dir, $new_media_file_name, $media_id);    
 
-		insert_new_movie_to_database($db_name, $mediadrop_path, $new_media_file_name, $media_id);    
+		mark_new_media_as_encoded($db_name, $new_media_file_name, $mediadrop_video_dir, $media_id);
 
-		mark_new_media_as_encoded($db_name, $new_media_file_name, $mediadrop_path, $media_id);
+		generate_thumbnail_file($mediadrop_thumbnail_dir, $thumbnail_extension, $mediadrop_video_dir, $thumbnail_script_name, $new_media_file_name, $media_id, $row['id']);
 
 		email_submitter($media_file_name, $author_email);
 	}
