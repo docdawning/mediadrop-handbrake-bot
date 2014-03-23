@@ -108,9 +108,9 @@ function mark_new_media_as_encoded($db_name, $new_media_file_name, $mediadrop_vi
 }
 
 //TODO: It'd be nice to use the mediadrop thumbnail library instead. It doesn't work for me.
-function generate_thumbnail_file($mediadrop_thumbnail_dir, $thumbnail_extension, $mediadrop_video_dir, $thumbnail_script_name, $src_media_file, $media_id, $video_id) {
+function generate_thumbnail_file($mediadrop_thumbnail_dir, $thumbnail_extension, $mediadrop_video_dir, $thumbnail_script_name, $src_media_file, $media_id) {
 	$thumbnail_orig_name = $mediadrop_thumbnail_dir.$media_id."orig.".$thumbnail_extension;
-	$src_media_file = $mediadrop_video_dir . ($video_id+1)."-".$src_media_file;
+	$src_media_file = $mediadrop_video_dir . $src_media_file;
 	echo "\nGenerating Thumbnail Image from file: \"".$src_media_file."\", saving to image file: ".$thumbnail_orig_name."\"\n";
 	shell_exec($thumbnail_script_name." ".$src_media_file." ".$thumbnail_orig_name);
 	
@@ -134,9 +134,9 @@ while(true){
 	    	}
 
 		// Get File to be transcoded
-	    	$media_file_name= $row['unique_id'];
-	    	$media_id = $row['mediaid'];
-	    	$author_email = $row['author_email'];
+	    $media_file_name= $row['unique_id'];
+	    $media_id = $row['mediaid'];
+	    $author_email = $row['author_email'];
 		$new_media_file_name = replace_extension($media_file_name, $new_extension);
 		$command = getTranscodeCommandString($handbrake_command, $handbrake_preset, $new_extension, $mediadrop_video_dir, $media_file_name, $new_media_file_name);
 
@@ -149,7 +149,7 @@ while(true){
 
 		mark_new_media_as_encoded($db_name, $new_media_file_name, $mediadrop_video_dir, $media_id);
 
-		generate_thumbnail_file($mediadrop_thumbnail_dir, $thumbnail_extension, $mediadrop_video_dir, $thumbnail_script_name, $new_media_file_name, $media_id, $row['id']);
+		generate_thumbnail_file($mediadrop_thumbnail_dir, $thumbnail_extension, $mediadrop_video_dir, $thumbnail_script_name, $row['unique_id'], $media_id);
 
 		email_submitter($media_file_name, $author_email);
 	}
